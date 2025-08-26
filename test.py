@@ -5,9 +5,10 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 import numpy as np
+import joblib
 
 try:
-    df = pd.read_csv("Mall_Customers.csv")
+    df = pd.read_csv("data/Mall_Customers.csv")
 except FileNotFoundError:
     print("Error: Mall_Customers.csv not found. Please make sure the file is in the correct directory.")
     exit()
@@ -31,8 +32,10 @@ print(f"Best k for 2 features: {best_k1} (Silhouette Score: {max_sil1:.4f})")
 kmeans1 = KMeans(n_clusters=best_k1, n_init=10, random_state=42)
 df["Cluster_2_Features"] = kmeans1.fit_predict(X1_scaled)
 
-centroids1 = scaler1.inverse_transform(kmeans1.cluster_centers_)
+joblib.dump(kmeans1, 'models/kmeans_2_features.joblib')
+joblib.dump(scaler1, 'modes/scaler_2_features.joblib')
 
+centroids1 = scaler1.inverse_transform(kmeans1.cluster_centers_)
 plt.figure(figsize=(10, 7))
 scatter1 = plt.scatter(df["Annual Income (k$)"], df["Spending Score (1-100)"], c=df["Cluster_2_Features"], cmap='viridis', alpha=0.7, label='Customers')
 plt.scatter(centroids1[:, 0], centroids1[:, 1], marker="X", s=200, c='red', label='Centroids')
@@ -43,7 +46,6 @@ plt.legend()
 plt.grid(True)
 plt.show()
 
-print("\n\nCluster Means (2 Features):")
 print(df.groupby("Cluster_2_Features")[["Annual Income (k$)", "Spending Score (1-100)"]].mean().round(2))
 
 X2 = df[["Age", "Annual Income (k$)", "Spending Score (1-100)"]].copy()
@@ -65,8 +67,10 @@ print(f"Best k for 3 features: {best_k2} (Silhouette Score: {max_sil2:.4f})")
 kmeans2 = KMeans(n_clusters=best_k2, n_init=10, random_state=42)
 df["Cluster_3_Features"] = kmeans2.fit_predict(X2_scaled)
 
-centroids2 = scaler2.inverse_transform(kmeans2.cluster_centers_)
+joblib.dump(kmeans2, 'models/kmeans_3_features.joblib')
+joblib.dump(scaler2, 'models/scaler_3_features.joblib')
 
+centroids2 = scaler2.inverse_transform(kmeans2.cluster_centers_)
 fig = plt.figure(figsize=(12, 9))
 ax = fig.add_subplot(111, projection='3d')
 scatter2 = ax.scatter(df["Age"], df["Annual Income (k$)"], df["Spending Score (1-100)"], c=df["Cluster_3_Features"], cmap='plasma', alpha=0.7, label='Customers')
@@ -78,7 +82,6 @@ ax.set_title(f"Customer Segments (3 Features, k={best_k2})")
 plt.legend()
 plt.show()
 
-print("\nCluster Means (3 Features):")
 print(df.groupby("Cluster_3_Features")[["Age", "Annual Income (k$)", "Spending Score (1-100)"]].mean().round(2))
 
 print("\n\n--- Comparison of Models ---")
@@ -95,4 +98,3 @@ if max_sil2 > max_sil1:
     print("Adding 'Age' helped create more distinct customer segments.")
 else:
     print("Conclusion: The 2-feature model has a higher or equal silhouette score, suggesting that adding 'Age' did not improve cluster definition.")
-
